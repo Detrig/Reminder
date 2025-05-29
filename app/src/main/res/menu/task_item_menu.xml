@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_change_status"
+        android:icon="@drawable/im_notification_on"
+        android:title="Изменить статус"/>
+    <item
+        android:id="@+id/action_delete"
+        android:iconTint="@color/black"
+        android:title="Удалить"/>
+</menu>

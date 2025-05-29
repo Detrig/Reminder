@@ -1,4 +1,4 @@
-package github.detrig.corporatekanbanboard.core
+package github.detrig.reminder.core
 
 sealed class Result<out T> {
     data class Success<out T>(val data: T) : Result<T>()
