@@ -20,7 +20,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:padding="8dp">
 
             <ImageView
                 android:id="@+id/taskImage"
@@ -87,10 +88,13 @@
             <TextView
                 android:id="@+id/taskNotificationTimeTV"
                 style="@style/TextViewRegularStyle"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:textSize="10sp"
+                android:layout_marginEnd="8dp"
+                android:maxLines="2"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/statusTV"
                 app:layout_constraintStart_toStartOf="@+id/taskTitleTV"
                 app:layout_constraintTop_toBottomOf="@+id/taskTitleTV"
                 tools:text="Время напоминания: 17:00" />

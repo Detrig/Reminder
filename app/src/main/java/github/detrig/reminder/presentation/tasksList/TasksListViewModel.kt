@@ -43,7 +43,7 @@ class TasksListViewModel(
 
             withContext(dispatcherMain) {
                 allTasksLiveDataWrapper.update(allTasks)
-                Log.d("alz-04", "allTasksIds: ${allTasks.map {it.id}}")
+
             }
         }
     }
@@ -72,8 +72,7 @@ class TasksListViewModel(
     fun saveOrUpdateTask(task: Task) {
         viewModelScope.launch(dispatcherIo) {
             val existingTask = taskRepository.getTaskById(task.id)
-            Log.d("alz-04", "task: $task")
-            Log.d("alz-04", "isTaskExist: $existingTask")
+
             if (existingTask != null) {
                 taskRepository.updateTask(task)
             } else {
@@ -99,8 +98,7 @@ class TasksListViewModel(
     fun updateTaskStatus(task: Task) {
         viewModelScope.launch(dispatcherIo) {
             val existingTask = taskRepository.getTaskById(task.id)
-            Log.d("alz-04", "task: $task")
-            Log.d("alz-04", "isTaskExist: $existingTask")
+
             if (existingTask != null) {
                 taskRepository.updateTask(task)
             } else {

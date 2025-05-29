@@ -20,7 +20,6 @@ class TaskReminderReceiver : BroadcastReceiver() {
         val text = intent?.getStringExtra("text") ?: "Срок задачи наступил"
         val imageUri = intent?.getStringExtra("imageUri")
 
-        Toast.makeText(context, "NOTIF: $title", Toast.LENGTH_LONG).show()
 
         val notificationBuilder = NotificationCompat.Builder(context, "task_channel")
             .setSmallIcon(R.drawable.ic_timer)

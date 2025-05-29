@@ -74,7 +74,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 //        binding.etTitle.addTextChangedListener { text ->
 //            binding.btnSave.isEnabled = text?.toString()?.isNotBlank() ?: false
 //        }
-        Log.d("alz-04", "clickedTask: ${viewModel.clickedTaskLiveDataWrapper()}")
+
         viewModel.clickedTaskLiveDataWrapper()?.let {
             if (it.title.isNotBlank()) {
                 binding.etTitle.setText(it.title)
@@ -96,7 +96,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
                 if (it.imageUri.isNotBlank()) {
                     selectedImageUri = it.imageUri.toUri()
                     loadImageWithGlide(it.imageUri.toUri())
-                    Log.d("alz-04", "88 $selectedImageUri")
+
                 }
             } else {
                 binding.headerOfTask.text = "Новая задача"
@@ -246,7 +246,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
         val triggerDate = selectedDate.time
         val now = System.currentTimeMillis()
-        Log.d("alz-debug", "triggerTime: ${triggerDate.time}, now: $now")
+
 
         if (triggerDate.time > now) {
             Log.d("alz-debug", "About to scheduleNotification")
@@ -281,7 +281,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             putExtra("imageUri", task.imageUri)
         }
 
-        Log.d("alz-debug", "scheduleNotification triggerTime: $triggerTime task: $task")
+
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             task.id.hashCode(),
