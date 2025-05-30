@@ -1,4 +1,4 @@
-package github.detrig.corporatekanbanboard.core
+package github.detrig.reminder.core
 
 import androidx.annotation.MainThread
 import androidx.lifecycle.LifecycleOwner

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/taskCardView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/light_gray"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardUseCompatPadding="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp">
+
+            <ImageView
+                android:id="@+id/taskImage"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/circle_background"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_timer"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/taskMenuButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="@android:color/transparent"
+                android:src="@drawable/ic_more"
+                app:layout_constraintBottom_toBottomOf="@+id/taskTitleTV"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/taskTitleTV" />
+
+            <TextView
+                android:id="@+id/taskTitleTV"
+                style="@style/TextViewMediumStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:maxLines="1"
+                app:layout_constraintEnd_toStartOf="@+id/taskMenuButton"
+                app:layout_constraintStart_toEndOf="@+id/taskImage"
+                app:layout_constraintTop_toTopOf="@+id/taskImage"
+                tools:text="Название задачи Название задачи Название задачи Название задачи Название задачи" />
+
+            <!--            <TextView-->
+            <!--                android:id="@+id/taskDescriptionTV"-->
+            <!--                style="@style/TextViewRegularStyle"-->
+            <!--                android:layout_width="0dp"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_marginStart="8dp"-->
+            <!--                android:layout_marginTop="4dp"-->
+            <!--                android:maxLines="2"-->
+            <!--                app:layout_constraintEnd_toStartOf="@+id/imageButton"-->
+            <!--                app:layout_constraintStart_toEndOf="@+id/taskImage"-->
+            <!--                app:layout_constraintTop_toBottomOf="@+id/taskTitleTV"-->
+            <!--                tools:text="Описание задачи Описание задачи Описание задачи Описание задачи Описание задачи" />-->
+
+            <TextView
+                android:id="@+id/statusTV"
+                style="@style/TextViewMediumStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_status"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="@+id/taskImage"
+                app:layout_constraintEnd_toEndOf="@+id/taskMenuButton"
+                tools:text="Активен" />
+
+            <TextView
+                android:id="@+id/taskNotificationTimeTV"
+                style="@style/TextViewRegularStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="8dp"
+                android:maxLines="2"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/statusTV"
+                app:layout_constraintStart_toStartOf="@+id/taskTitleTV"
+                app:layout_constraintTop_toBottomOf="@+id/taskTitleTV"
+                tools:text="Время напоминания: 17:00" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

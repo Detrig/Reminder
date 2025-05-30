@@ -1,4 +1,4 @@
-package github.detrig.corporatekanbanboard.core
+package github.detrig.reminder.core
 
 import android.content.Context
 import android.os.Bundle

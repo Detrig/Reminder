@@ -1,4 +1,4 @@
-package github.detrig.corporatekanbanboard.core
+package github.detrig.reminder.core
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager

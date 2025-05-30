@@ -1,20 +1,18 @@
-package github.detrig.corporatekanbanboard.core
+package github.detrig.reminder.core
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
-import com.google.firebase.FirebaseApp
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.google.firebase.firestore.MemoryCacheSettings
-import com.google.firebase.firestore.PersistentCacheSettings
-import github.detrig.corporatekanbanboard.data.local.database.AppDatabase
-import java.util.concurrent.TimeUnit
+import github.detrig.reminder.data.TaskDatabase
+
 
 class App : Application(), ProvideViewModel {
 
     private lateinit var factory: ViewModelFactory
-    private lateinit var appDatabase: AppDatabase
 
     private val clear: ClearViewModel = object : ClearViewModel {
         override fun clearViewModel(viewModelClass: Class<out ViewModel>) {
@@ -26,28 +24,28 @@ class App : Application(), ProvideViewModel {
         super.onCreate()
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        val taskDatabase = TaskDatabase.getInstance(this)
 
-        FirebaseApp.initializeApp(this)
-        appDatabase = AppDatabase.getInstance(this)
-
-        FirebaseFirestore.getInstance()
-//        val settings = FirebaseFirestoreSettings.Builder()
-//            .setLocalCacheSettings(MemoryCacheSettings.newBuilder().build()) // Включение кэша в памяти
-//            .setLocalCacheSettings(PersistentCacheSettings.newBuilder().build()) // Включение дискового кэша
-//            .build()
-//        firestore.firestoreSettings = settings
-
-        val provideViewModel = ProvideViewModel.Base(clear, appDatabase)
+        val provideViewModel = ProvideViewModel.Base(clear, taskDatabase)
         factory = ViewModelFactory.Base(provideViewModel)
     }
 
+    fun createNotificationChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Task Reminders"
+            val descriptionText = "Channel for task deadline reminders"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("task_channel", name, importance).apply {
+                description = descriptionText
+            }
+
+            val notificationManager: NotificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
 
     override fun <T : ViewModel> viewModel(viewModelClass: Class<T>): T =
         factory.viewModel(viewModelClass)
 
-    companion object {
-        var currentUserId: String = ""
-        var currentUserEmail: String = ""
-        var currentUserName: String = ""
-    }
 }

@@ -1,4 +1,4 @@
-package github.detrig.corporatekanbanboard.core
+package github.detrig.reminder.core
 
 
 interface Navigation : LiveDataWrapper.Mutable<Screen> {
