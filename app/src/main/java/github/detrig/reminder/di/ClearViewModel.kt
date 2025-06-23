@@ -1,4 +1,4 @@
-package github.detrig.reminder.core
+package github.detrig.reminder.di
 
 import androidx.lifecycle.ViewModel
 

@@ -52,11 +52,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:maxLines="1"
+                android:maxLines="2"
                 app:layout_constraintEnd_toStartOf="@+id/taskMenuButton"
                 app:layout_constraintStart_toEndOf="@+id/taskImage"
                 app:layout_constraintTop_toTopOf="@+id/taskImage"
-                tools:text="Название задачи Название задачи Название задачи Название задачи Название задачи" />
+                tools:text="Название задачи Название задачи Название ссссссзадачи Название задачи Название задачи" />
 
             <!--            <TextView-->
             <!--                android:id="@+id/taskDescriptionTV"-->
@@ -81,7 +81,7 @@
                 android:paddingVertical="4dp"
                 android:textColor="@color/white"
                 android:textSize="12sp"
-                app:layout_constraintBottom_toBottomOf="@+id/taskImage"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@+id/taskMenuButton"
                 tools:text="Активен" />
 

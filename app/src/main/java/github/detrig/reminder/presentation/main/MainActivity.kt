@@ -1,24 +1,17 @@
-package github.detrig.reminder.main
+package github.detrig.reminder.presentation.main
 
 import android.Manifest
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import github.detrig.reminder.R
-import github.detrig.reminder.core.ProvideViewModel
+import github.detrig.reminder.di.ProvideViewModel
 import github.detrig.reminder.databinding.ActivityMainBinding
-import github.detrig.reminder.domain.utils.TaskReminderReceiver
-import github.detrig.reminder.domain.utils.TestReceiver
 
 
 class MainActivity : AppCompatActivity(), ProvideViewModel {

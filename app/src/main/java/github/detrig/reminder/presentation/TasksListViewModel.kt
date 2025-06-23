@@ -1,25 +1,24 @@
-package github.detrig.reminder.presentation.tasksList
+package github.detrig.reminder.presentation
 
-import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import github.detrig.reminder.di.ClearViewModel
 import github.detrig.reminder.core.Navigation
 import github.detrig.reminder.core.Screen
 import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.domain.repository.TaskRepository
 import github.detrig.reminder.domain.utils.AllTasksLiveDataWrapper
 import github.detrig.reminder.domain.utils.ClickedTaskLiveDataWrapper
-import github.detrig.reminder.presentation.addTask.AddTaskFragment
 import github.detrig.reminder.presentation.addTask.AddTaskScreen
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class TasksListViewModel(
+    private val clearViewModel: ClearViewModel,
     private val navigation: Navigation,
     private val taskRepository: TaskRepository,
     private val clickedTaskLiveDataWrapper : ClickedTaskLiveDataWrapper,
@@ -29,6 +28,7 @@ class TasksListViewModel(
     private val dispatcherIo: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     init {
         getAllTasks()
     }
@@ -62,7 +62,8 @@ class TasksListViewModel(
         viewModelScope.launch(dispatcherIo) {
             taskRepository.deleteTask(task)
             withContext(dispatcherMain) {
-                val allTasksList = allTasksLiveDataWrapper.liveData().value?.toMutableList() ?: mutableListOf()
+                val allTasksList =
+                    allTasksLiveDataWrapper.liveData().value?.toMutableList() ?: mutableListOf()
                 allTasksList.remove(task)
                 allTasksLiveDataWrapper.update(allTasksList)
             }
@@ -80,7 +81,8 @@ class TasksListViewModel(
             }
 
             withContext(dispatcherMain) {
-                val currentList = allTasksLiveDataWrapper.liveData().value?.toMutableList() ?: mutableListOf()
+                val currentList =
+                    allTasksLiveDataWrapper.liveData().value?.toMutableList() ?: mutableListOf()
                 val index = currentList.indexOfFirst { it.id == task.id }
 
                 if (index != -1) {
@@ -106,7 +108,8 @@ class TasksListViewModel(
             }
 
             withContext(dispatcherMain) {
-                val currentList = allTasksLiveDataWrapper.liveData().value?.toMutableList() ?: mutableListOf()
+                val currentList =
+                    allTasksLiveDataWrapper.liveData().value?.toMutableList() ?: mutableListOf()
                 val index = currentList.indexOfFirst { it.id == task.id }
 
                 if (index != -1) {

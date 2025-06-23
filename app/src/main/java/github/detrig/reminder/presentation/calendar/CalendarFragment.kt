@@ -11,13 +11,13 @@ import com.applandeo.materialcalendarview.CalendarDay
 import com.applandeo.materialcalendarview.listeners.OnCalendarDayClickListener
 import github.detrig.reminder.R
 import github.detrig.reminder.core.AbstractFragment
-import github.detrig.reminder.core.ProvideViewModel
+import github.detrig.reminder.di.ProvideViewModel
 import github.detrig.reminder.databinding.FragmentCalendarBinding
 import github.detrig.reminder.domain.model.DAYS
 import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.domain.model.toCalendar
 import github.detrig.reminder.domain.model.toTaskDateFormat
-import github.detrig.reminder.presentation.tasksList.TasksListViewModel
+import github.detrig.reminder.presentation.TasksListViewModel
 import github.detrig.reminder.presentation.tasksList.TasksRcViewAdapter
 import kotlinx.coroutines.launch
 import java.util.Calendar

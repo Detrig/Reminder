@@ -6,10 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import github.detrig.reminder.core.AbstractFragment
-import github.detrig.reminder.core.ProvideViewModel
+import github.detrig.reminder.di.ProvideViewModel
 import github.detrig.reminder.databinding.FragmentTasksListBinding
 import github.detrig.reminder.domain.model.DAYS
 import github.detrig.reminder.domain.model.Task
+import github.detrig.reminder.presentation.TasksListViewModel
 
 class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
 

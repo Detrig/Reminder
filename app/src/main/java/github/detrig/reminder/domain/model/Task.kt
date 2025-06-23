@@ -12,7 +12,7 @@ data class Task(
     val notificationText: String = "",
     val notificationTime: String = "",
     val notificationDate: String = "",
-    val periodicityDaysWithTime: Set<Pair<DAYS, String>> = setOf(),
+    val periodicityDaysWithTime: Set<Pair<DAYS, String>> = setOf(), //Day, time
     val imageUri: String = "",
     val isActive: Boolean = true
 )
