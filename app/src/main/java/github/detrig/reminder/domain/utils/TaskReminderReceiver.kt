@@ -45,7 +45,6 @@ class TaskReminderReceiver : BroadcastReceiver() {
                 !imageUri.isNullOrEmpty() -> {
                     Log.d("alz-04", "Trying to load image from URI: $imageUri")
                     try {
-                        // Для content URI нужно использовать FileDescriptor
                         val parcelFileDescriptor = context.contentResolver.openFileDescriptor(
                             Uri.parse(imageUri), "r"
                         )

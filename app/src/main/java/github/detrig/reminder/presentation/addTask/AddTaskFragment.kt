@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,17 +17,19 @@ import com.bumptech.glide.Glide
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import github.detrig.reminder.core.AbstractFragment
-import github.detrig.reminder.core.ProvideViewModel
+import github.detrig.reminder.di.ProvideViewModel
 import github.detrig.reminder.databinding.FragmentAddTaskBinding
 import github.detrig.reminder.domain.model.DAYS
 import github.detrig.reminder.domain.model.Task
-import github.detrig.reminder.presentation.tasksList.TasksListViewModel
+import github.detrig.reminder.presentation.TasksListViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 import androidx.core.net.toUri
+import github.detrig.reminder.domain.model.toCalendar
 import github.detrig.reminder.domain.utils.TaskReminderReceiver
+import java.util.Date
 import java.util.TimeZone
 
 class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
@@ -162,9 +165,22 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
     }
 
     private fun showDatePickerDialog() {
+        val currentText = binding.tvSelectedDateTime.text.toString()
+        val initialSelection = if (currentText != "Дата и время не выбраны") {
+            try {
+                val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                val date = dateFormat.parse(currentText)
+                date?.time ?: MaterialDatePicker.todayInUtcMilliseconds()
+            } catch (e: Exception) {
+                MaterialDatePicker.todayInUtcMilliseconds()
+            }
+        } else {
+            MaterialDatePicker.todayInUtcMilliseconds()
+        }
+
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Выберите дату")
-            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .setSelection(initialSelection)
             .build()
 
         datePicker.addOnPositiveButtonClickListener { millis ->
@@ -176,10 +192,25 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
     }
 
     private fun showTimePickerDialog() {
+        // Пытаемся получить время из текстового поля
+        val currentText = binding.tvSelectedDateTime.text.toString()
+        val (hour, minute) = if (currentText != "Дата и время не выбраны") {
+            try {
+                val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                val date = dateFormat.parse(currentText)
+                val calendar = Calendar.getInstance().apply { time = date ?: Date() }
+                calendar.get(Calendar.HOUR_OF_DAY) to calendar.get(Calendar.MINUTE)
+            } catch (e: Exception) {
+                selectedTime.get(Calendar.HOUR_OF_DAY) to selectedTime.get(Calendar.MINUTE)
+            }
+        } else {
+            selectedTime.get(Calendar.HOUR_OF_DAY) to selectedTime.get(Calendar.MINUTE)
+        }
+
         val timePicker = MaterialTimePicker.Builder()
             .setTitleText("Выберите время")
-            .setHour(selectedTime.get(Calendar.HOUR_OF_DAY))
-            .setMinute(selectedTime.get(Calendar.MINUTE))
+            .setHour(hour)
+            .setMinute(minute)
             .build()
 
         timePicker.addOnPositiveButtonClickListener {
@@ -193,7 +224,6 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
 
     private fun updateDateTimeText() {
-        // Обновим selectedDate, чтобы объединить дату и время
         selectedDate.set(Calendar.HOUR_OF_DAY, selectedTime.get(Calendar.HOUR_OF_DAY))
         selectedDate.set(Calendar.MINUTE, selectedTime.get(Calendar.MINUTE))
         selectedDate.set(Calendar.SECOND, 0)
@@ -242,6 +272,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
                 isActive = true
             )
         }
+        Log.d("alz-04", "task: $task")
         viewModel.saveOrUpdateTask(task)
 
         val triggerDate = selectedDate.time
@@ -254,6 +285,8 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
         } else {
             Log.w("alz-debug", "Trigger time is in the past, skipping scheduling.")
         }
+
+        scheduleRecurringNotificationsForMonth(requireContext(), task)
     }
 
 
@@ -298,6 +331,85 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
         }
         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
 
+    }
+
+
+    private fun scheduleRecurringNotificationsForMonth(context: Context, task: Task) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val calendar = Calendar.getInstance()
+        val now = System.currentTimeMillis()
+
+        // Месяц вперед от текущей даты
+        val endDate = Calendar.getInstance().apply {
+            add(Calendar.MONTH, 1)
+        }.timeInMillis
+
+        // Для каждого дня в периодичности
+        task.periodicityDaysWithTime.forEach { (dayOfWeek, timeStr) ->
+            val dayOfWeekInt = when (dayOfWeek) {
+                DAYS.MONDAY -> Calendar.MONDAY
+                DAYS.TUESDAY -> Calendar.TUESDAY
+                DAYS.WEDNESDAY -> Calendar.WEDNESDAY
+                DAYS.THURSDAY -> Calendar.THURSDAY
+                DAYS.FRIDAY -> Calendar.FRIDAY
+                DAYS.SATURDAY -> Calendar.SATURDAY
+                DAYS.SUNDAY -> Calendar.SUNDAY
+            }
+
+            // Парсим время (формат "HH:mm")
+            val timeParts = timeStr.split(":")
+            val hour = timeParts[0].toInt()
+            val minute = timeParts[1].toInt()
+
+            // Находим следующее вхождение этого дня недели
+            calendar.timeInMillis = now
+            calendar.set(Calendar.HOUR_OF_DAY, hour)
+            calendar.set(Calendar.MINUTE, minute)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+
+            // Переходим к следующему указанному дню недели
+            while (calendar.get(Calendar.DAY_OF_WEEK) != dayOfWeekInt) {
+                calendar.add(Calendar.DAY_OF_MONTH, 1)
+            }
+
+            // Создаем уведомления для каждого вхождения до конца месяца
+            while (calendar.timeInMillis <= endDate) {
+                if (calendar.timeInMillis > now) {
+                    val intent = Intent(context, TaskReminderReceiver::class.java).apply {
+                        putExtra("title", task.title)
+                        putExtra("text", task.notificationText)
+                        putExtra("imageUri", task.imageUri)
+                    }
+
+                    val requestCode = (task.id + calendar.timeInMillis.toString()).hashCode()
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        requestCode,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        if (!alarmManager.canScheduleExactAlarms()) {
+                            Log.w("alz-debug", "Cannot schedule exact alarms, permission denied")
+                            continue
+                        }
+                    }
+
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+
+                    Log.d("alz-debug", "Scheduled notification for ${calendar.time}")
+                }
+
+                // Переходим к следующей неделе
+                calendar.add(Calendar.DAY_OF_MONTH, 7)
+            }
+        }
     }
 
     private fun getSelectedDays(): MutableMap<DAYS, Boolean> {

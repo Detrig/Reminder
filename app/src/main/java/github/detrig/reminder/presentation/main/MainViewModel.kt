@@ -1,4 +1,4 @@
-package github.detrig.reminder.main
+package github.detrig.reminder.presentation.main
 
 import androidx.lifecycle.ViewModel
 import github.detrig.reminder.presentation.calendar.CalendarScreen

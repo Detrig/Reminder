@@ -1,6 +1,7 @@
-package github.detrig.reminder.core
+package github.detrig.reminder.di
 
 import androidx.lifecycle.ViewModel
+import github.detrig.reminder.di.ProvideViewModel
 
 interface ViewModelFactory : ProvideViewModel, ClearViewModel {
 
@@ -23,5 +24,6 @@ interface ViewModelFactory : ProvideViewModel, ClearViewModel {
         override fun clearViewModel(viewModelClass: Class<out ViewModel>) {
             map.remove(viewModelClass)
         }
+
     }
 }

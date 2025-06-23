@@ -7,26 +7,33 @@ import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
-import github.detrig.reminder.data.TaskDatabase
+import github.detrig.reminder.di.ClearViewModel
+import github.detrig.reminder.di.Core
+import github.detrig.reminder.di.ProvideViewModel
+import github.detrig.reminder.di.ViewModelFactory
 
 
 class App : Application(), ProvideViewModel {
 
     private lateinit var factory: ViewModelFactory
+    private lateinit var core: Core
 
-    private val clear: ClearViewModel = object : ClearViewModel {
-        override fun clearViewModel(viewModelClass: Class<out ViewModel>) {
-            factory.clearViewModel(viewModelClass)
-        }
-    }
+
 
     override fun onCreate() {
         super.onCreate()
 
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        val taskDatabase = TaskDatabase.getInstance(this)
+        val clearViewModel: ClearViewModel = object : ClearViewModel {
+            override fun clearViewModel(viewModelClass: Class<out ViewModel>) {
+                factory.clearViewModel(viewModelClass)
+            }
+        }
+        core = Core(this, clearViewModel)
 
-        val provideViewModel = ProvideViewModel.Base(clear, taskDatabase)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+//        val taskDatabase = TaskDatabase.getInstance(this)
+
+        val provideViewModel = ProvideViewModel.Base(core)
         factory = ViewModelFactory.Base(provideViewModel)
     }
 
