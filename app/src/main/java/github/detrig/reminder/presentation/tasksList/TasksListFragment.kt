@@ -1,6 +1,8 @@
 package github.detrig.reminder.presentation.tasksList
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -36,6 +38,7 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
         viewModel.tasksLiveData().observe(viewLifecycleOwner) {
             dateTasksRcViewAdapter.update(ArrayList(it))
         }
+        printAllScheduledNotifications(requireContext())
     }
 
     private fun initViews() {
@@ -63,6 +66,26 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
 
         binding.addTaskButton.setOnClickListener {
             viewModel.addTaskScreen(Task())
+        }
+    }
+
+    //Debug
+    fun printAllScheduledNotifications(context: Context) {
+        val prefs = context.getSharedPreferences("work_manager_prefs", Context.MODE_PRIVATE)
+        val allEntries = prefs.all
+
+        if (allEntries.isEmpty()) {
+            Log.d("alz-04", "Нет запланированных уведомлений")
+            return
+        }
+
+        Log.d("alz-04", "Запланированные уведомления:")
+        allEntries.forEach { (key, value) ->
+            if (key.startsWith("task_")) {
+                val taskId = key.removePrefix("task_")
+                val workId = value.toString()
+                Log.d("alz-04", "Task ID: $taskId, WorkManager ID: $workId")
+            }
         }
     }
 }

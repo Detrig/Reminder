@@ -1,5 +1,6 @@
 package github.detrig.reminder.domain.utils
 
+import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -27,4 +28,24 @@ object DateUtil {
         return result
     }
 
+    fun getTriggerTimeMillis(dateStr: String, timeStr: String): Long {
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val date = dateFormatter.parse(dateStr) ?: return 0L
+
+        val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        val timeF = timeFormatter.parse(timeStr) ?: return 0L
+
+        val calendar = Calendar.getInstance().apply {
+            time = date
+
+            val timeCalendar = Calendar.getInstance().apply { time = timeF }
+            set(Calendar.HOUR_OF_DAY, timeCalendar.get(Calendar.HOUR_OF_DAY))
+            set(Calendar.MINUTE, timeCalendar.get(Calendar.MINUTE))
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        Log.d("alz-04", "time: ${calendar.timeInMillis}")
+        return calendar.timeInMillis
+    }
 }

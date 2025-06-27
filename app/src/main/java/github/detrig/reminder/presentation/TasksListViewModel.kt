@@ -7,6 +7,8 @@ import github.detrig.reminder.core.Screen
 import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.domain.repository.TaskRepository
 import github.detrig.reminder.domain.utils.AllTasksLiveDataWrapper
+import github.detrig.reminder.domain.utils.DateUtil
+import github.detrig.reminder.domain.utils.NotificationScheduler
 import github.detrig.reminder.presentation.addTask.AddTaskScreen
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +22,7 @@ class TasksListViewModel(
     private val clearViewModel: ClearViewModel,
     private val navigation: Navigation,
     private val taskRepository: TaskRepository,
+    private val notificationScheduler: NotificationScheduler,
     private val allTasksLiveDataWrapper: AllTasksLiveDataWrapper,
     private val viewModelScope: CoroutineScope,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
@@ -64,9 +67,14 @@ class TasksListViewModel(
 
                 if (existingTask != null) {
                     taskRepository.updateTask(task)
+                    cancelReminder(existingTask)
                 } else {
                     taskRepository.insertTask(task)
                 }
+                setReminder(
+                    task,
+                    DateUtil.getTriggerTimeMillis(task.notificationDate, task.notificationTime)
+                )
             }
             withContext(dispatcherMain) {
                 val currentList =
@@ -90,6 +98,15 @@ class TasksListViewModel(
     fun updateTaskStatus(task: Task) {
         viewModelScope.launch(dispatcherIo) {
             val existingTask = taskRepository.getTaskById(task.id)
+
+            if (!task.isActive) {
+                cancelReminder(task)
+            } else {
+                setReminder(
+                    task,
+                    DateUtil.getTriggerTimeMillis(task.notificationDate, task.notificationTime)
+                )
+            }
 
             if (existingTask != null) {
                 taskRepository.updateTask(task)
@@ -119,6 +136,13 @@ class TasksListViewModel(
         return tasksForDate
     }
 
+    fun setReminder(task: Task, time: Long) {
+        notificationScheduler.schedule(task, time)
+    }
+
+    fun cancelReminder(task: Task) {
+        notificationScheduler.cancel(task.id)
+    }
 
     fun addTaskScreen(task: Task) {
         if (task.title.isNotBlank()) {

@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -26,12 +25,15 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 import androidx.core.net.toUri
-import androidx.core.os.bundleOf
-import com.applandeo.materialcalendarview.CalendarDay
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import github.detrig.reminder.domain.utils.DateUtil
+import github.detrig.reminder.domain.utils.TaskNotificationWorker
 import github.detrig.reminder.domain.utils.TaskReminderReceiver
 import java.util.Date
-import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 
 class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
@@ -40,13 +42,10 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
     private var selectedDate = Calendar.getInstance()
     private var selectedTime = Calendar.getInstance()
     private val selectedDays = mutableMapOf<Int, Boolean>()
-    private val calendar = Calendar.getInstance()
-    private val now = System.currentTimeMillis()
     private var selectedImageUri: Uri? = null
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
-                // 🟢 ВАЖНО: взять разрешение
                 requireActivity().contentResolver.takePersistableUriPermission(
                     it,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -56,7 +55,6 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
                 loadImageWithGlide(it)
             }
         }
-
 
     override fun bind(
         inflater: LayoutInflater,
@@ -76,12 +74,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
         binding.btnBack.setOnClickListener { viewModel.backToPreviousScreen() }
 
-//        binding.etTitle.addTextChangedListener { text ->
-//            binding.btnSave.isEnabled = text?.toString()?.isNotBlank() ?: false
-//        }
-
         clickedTask = requireArguments().getSerializable("TASK_KEY") as Task
-        Log.d("alz-04", "task get: $clickedTask")
 
         clickedTask?.let {
             if (it.title.isNotBlank()) {
@@ -104,8 +97,9 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
                 if (it.imageUri.isNotBlank()) {
                     selectedImageUri = it.imageUri.toUri()
                     loadImageWithGlide(it.imageUri.toUri())
-
                 }
+                binding.selectDaysToRepeatLinearLayout.visibility = View.GONE
+                binding.repeatText.visibility = View.GONE
             } else {
                 binding.headerOfTask.text = "Новая задача"
             }
@@ -149,7 +143,6 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             selectedDays[Calendar.SUNDAY] = isChecked
         }
 
-        // Save button
         binding.btnSave.setOnClickListener {
             saveTask()
         }
@@ -197,7 +190,6 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
     }
 
     private fun showTimePickerDialog() {
-        // Пытаемся получить время из текстового поля
         val currentText = binding.tvSelectedDateTime.text.toString()
         val (hour, minute) = if (currentText != "Дата и время не выбраны") {
             try {
@@ -253,10 +245,6 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
                 notificationText = binding.etNotificationText.text.toString(),
                 notificationTime = timeFormat.format(selectedTime.time),
                 notificationDate = dateFormat.format(selectedDate.time),
-                periodicityDaysWithTime = getSelectedDays()
-                    .filter { it.value }
-                    .map { it.key to timeFormat.format(selectedTime.time) }
-                    .toSet(),
                 imageUri = (selectedImageUri?.toString())
                     ?: clickedTask.imageUri ?: "",
                 isActive = true
@@ -288,31 +276,21 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             dates.forEachIndexed { index, dateStr ->
                 val newTask = task.copy(
                     id = task.id + allTasksList.size + 1,
-                    notificationDate = dateStr // или сохраняйте Calendar, если нужно
+                    notificationDate = dateStr
                 )
                 allTasksList.add(newTask)
             }
         }
-        Log.d("alz-04", "allTasksDate: ${allTasksList.map { it.notificationDate }}")
-
 
         viewModel.saveOrUpdateTask(allTasksList)
 
-
-        val triggerDate = selectedDate.time
-        val now = System.currentTimeMillis()
-
-
-        if (triggerDate.time > now) {
-            Log.d("alz-debug", "About to scheduleNotification")
-            scheduleNotification(requireContext(), task, triggerDate.time)
-        } else {
-            Log.w("alz-debug", "Trigger time is in the past, skipping scheduling.")
-        }
-
-        //scheduleRecurringNotificationsForMonth(requireContext(), task)
+//        allTasksList.forEach { task ->
+//            viewModel.setReminder(
+//                task,
+//                DateUtil.getTriggerTimeMillis(task.notificationDate, task.notificationTime)
+//            )
+//        }
     }
-
 
     private fun loadImageWithGlide(uri: Uri) {
         Glide.with(this)
@@ -324,104 +302,6 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             binding.TaskImage.visibility = View.VISIBLE
             binding.btnRemoveImage.visibility = View.VISIBLE
             binding.btnAddImage.text = "Изменить изображение"
-        }
-    }
-
-
-    fun scheduleNotification(context: Context, task: Task, triggerTime: Long) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-
-        val intent = Intent(context, TaskReminderReceiver::class.java).apply {
-            putExtra("title", task.title)
-            putExtra("text", task.notificationText)
-            putExtra("imageUri", task.imageUri)
-        }
-
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            task.id.hashCode(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            if (!alarmManager.canScheduleExactAlarms()) {
-                // Разрешение отсутствует — нужно либо запросить у пользователя, либо объяснить, что функция недоступна
-                Log.w("alz-debug", "Cannot schedule exact alarms, permission denied")
-                return
-            }
-        }
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-
-    }
-
-
-    private fun scheduleRecurringNotificationsForMonth(context: Context, task: Task) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-        // Месяц вперед от текущей даты
-        val endDate = Calendar.getInstance().apply {
-            add(Calendar.MONTH, 1)
-        }.timeInMillis
-
-        // Для каждого дня в периодичности
-        task.periodicityDaysWithTime.forEach { (dayOfWeek, timeStr) ->
-
-            // Парсим время (формат "HH:mm")
-            val timeParts = timeStr.split(":")
-            val hour = timeParts[0].toInt()
-            val minute = timeParts[1].toInt()
-
-            // Находим следующее вхождение этого дня недели
-            calendar.timeInMillis = now
-            calendar.set(Calendar.HOUR_OF_DAY, hour)
-            calendar.set(Calendar.MINUTE, minute)
-            calendar.set(Calendar.SECOND, 0)
-            calendar.set(Calendar.MILLISECOND, 0)
-
-            // Переходим к следующему указанному дню недели
-            while (calendar.get(Calendar.DAY_OF_WEEK) != dayOfWeek) {
-                calendar.add(Calendar.DAY_OF_MONTH, 1)
-            }
-
-            // Создаем уведомления для каждого вхождения до конца месяца
-            while (calendar.timeInMillis <= endDate) {
-                if (calendar.timeInMillis > now) {
-                    val intent = Intent(context, TaskReminderReceiver::class.java).apply {
-                        putExtra("title", task.title)
-                        putExtra("text", task.notificationText)
-                        putExtra("imageUri", task.imageUri)
-                    }
-
-                    val requestCode = (task.id + calendar.timeInMillis.toString()).hashCode()
-                    val pendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        requestCode,
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        if (!alarmManager.canScheduleExactAlarms()) {
-                            Log.w("alz-debug", "Cannot schedule exact alarms, permission denied")
-                            continue
-                        }
-                    }
-
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        calendar.timeInMillis,
-                        pendingIntent
-                    )
-
-                    Log.d("alz-debug", "Scheduled notification for ${calendar.time}")
-                }
-
-                // Переходим к следующей неделе
-                calendar.add(Calendar.DAY_OF_MONTH, 7)
-            }
         }
     }
 
@@ -451,9 +331,5 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
         }
 
         return selectedDays_check
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 }
