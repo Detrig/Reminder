@@ -14,7 +14,7 @@ import github.detrig.reminder.presentation.TasksListViewModel
 class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
 
     private lateinit var viewModel: TasksListViewModel
-    private lateinit var tasksRcViewAdapter: TasksRcViewAdapter
+    private lateinit var dateTasksRcViewAdapter: DateTasksRcViewAdapter
 
     override fun bind(
         inflater: LayoutInflater,
@@ -30,16 +30,16 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
         viewModel.getAllTasks()
 
         viewModel.tasksLiveData().value?.let {
-            tasksRcViewAdapter.update(ArrayList(it))
+            dateTasksRcViewAdapter.update(ArrayList(it))
         }
 
         viewModel.tasksLiveData().observe(viewLifecycleOwner) {
-            tasksRcViewAdapter.update(ArrayList(it))
+            dateTasksRcViewAdapter.update(ArrayList(it))
         }
     }
 
     private fun initViews() {
-        tasksRcViewAdapter = TasksRcViewAdapter(object : TasksRcViewAdapter.OnTaskClickListener {
+        dateTasksRcViewAdapter = DateTasksRcViewAdapter(object : TasksRcViewAdapter.OnTaskClickListener {
             override fun onClick(task: Task) {
                 viewModel.addTaskScreen(task)
             }
@@ -58,15 +58,12 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
             override fun onStatusChangeClick(task: Task) {
                 viewModel.updateTaskStatus(task.copy(isActive = !task.isActive))
             }
-
-
         })
-        binding.tasksRcView.adapter = tasksRcViewAdapter
+        binding.tasksWithDateRcView.adapter = dateTasksRcViewAdapter
 
         binding.addTaskButton.setOnClickListener {
             viewModel.addTaskScreen(Task())
         }
     }
-
 }
 

@@ -10,5 +10,6 @@
 
 
     <color name="bottom_nav_background">#FFFFFFFF</color>
+    <color name="medium_gray">#86888A</color>
 
 </resources>

@@ -23,5 +23,4 @@ class ProvideTasksListViewModel(val core: Core, next: ProvideViewModel) : Abstra
     TasksListViewModel::class.java
 ) {
     override fun module(): Module<*> = TasksListModule(core)
-
 }
