@@ -60,4 +60,8 @@ dependencies {
     implementation("com.applandeo:material-calendar-view:1.9.2")
 
     implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    //Work manager
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.work.runtime)
 }

@@ -106,7 +106,6 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
                 }
             }
         }
-        Log.d("alz-04", "dateTaskMap: $dateTaskMap")
 
         dateTaskMap.forEach { (date, tasksForDateList) ->
             try {
@@ -129,12 +128,14 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
 
                 val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     .format(Calendar.getInstance().time)
-                Log.d("alz-04", "today: $today, date: $date")
                 val calendarDay = CalendarDay(calendar).apply {
                     labelColor = R.color.white
                     backgroundResource = backgroundRes
-                    if (date < today)
+                    if (date <= today)
                         imageResource = if (isAllTasksForDateDone) R.drawable.ic_done_all else R.drawable.ic_cross
+                    if (date > today && isAllTasksForDateDone) {
+                        imageResource = R.drawable.ic_done_all
+                    }
                 }
 
                 calendarDays.add(calendarDay)
