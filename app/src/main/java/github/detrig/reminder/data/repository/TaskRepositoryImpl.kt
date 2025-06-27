@@ -5,7 +5,6 @@ import com.google.gson.reflect.TypeToken
 import github.detrig.reminder.data.local.DayTimePair
 import github.detrig.reminder.data.local.dao.TaskDao
 import github.detrig.reminder.data.local.entities.TaskEntity
-import github.detrig.reminder.domain.model.DAYS
 import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.domain.repository.TaskRepository
 
@@ -71,7 +70,7 @@ class TaskRepositoryImpl(
             notificationTime = notificationTime,
             notificationDate = notificationDate,
             periodicityDaysWithTime = serializedList.map {
-                DAYS.valueOf(it.day.toString()) to it.time
+                it.day to it.time
             }.toSet(),
             imageUri = image,
             isActive = isActive

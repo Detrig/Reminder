@@ -6,20 +6,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.lifecycleScope
 import com.applandeo.materialcalendarview.CalendarDay
 import com.applandeo.materialcalendarview.listeners.OnCalendarDayClickListener
 import github.detrig.reminder.R
 import github.detrig.reminder.core.AbstractFragment
 import github.detrig.reminder.di.ProvideViewModel
 import github.detrig.reminder.databinding.FragmentCalendarBinding
-import github.detrig.reminder.domain.model.DAYS
 import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.domain.model.toCalendar
 import github.detrig.reminder.domain.model.toTaskDateFormat
 import github.detrig.reminder.presentation.TasksListViewModel
 import github.detrig.reminder.presentation.tasksList.TasksRcViewAdapter
-import kotlinx.coroutines.launch
 import java.util.Calendar
 
 
@@ -45,27 +42,17 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
             override fun onClick(calendarDay: CalendarDay) {
                 clickedDate = calendarDay.toTaskDateFormat()
                 val clickedCalendar = calendarDay.calendar
-                val dayOfWeek = when (clickedCalendar.get(Calendar.DAY_OF_WEEK)) {
-                    Calendar.MONDAY -> DAYS.MONDAY
-                    Calendar.TUESDAY -> DAYS.TUESDAY
-                    Calendar.WEDNESDAY -> DAYS.WEDNESDAY
-                    Calendar.THURSDAY -> DAYS.THURSDAY
-                    Calendar.FRIDAY -> DAYS.FRIDAY
-                    Calendar.SATURDAY -> DAYS.SATURDAY
-                    Calendar.SUNDAY -> DAYS.SUNDAY
-                    else -> null
-                }
 
                 val tasksForDate = viewModel.getTasksByDate(clickedDate).toMutableList()
 
-                // Добавим задачи с повторением, если совпадает день недели
-                dayOfWeek?.let { day ->
-                    viewModel.tasksLiveData().value?.forEach { task ->
-                        if (task.periodicityDaysWithTime.any { it.first == day }) {
-                            tasksForDate.add(task)
-                        }
-                    }
-                }
+//                // Добавим задачи с повторением, если совпадает день недели
+//                calendarDay?.let { day ->
+//                    viewModel.tasksLiveData().value?.forEach { task ->
+//                        if (task.periodicityDaysWithTime.any { it.first == day }) {
+//                            tasksForDate.add(task)
+//                        }
+//                    }
+//                }
 
                 tasksRcViewAdapter.update(ArrayList(tasksForDate))
             }
@@ -113,14 +100,29 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
         val oneMonthLater = Calendar.getInstance().apply { add(Calendar.MONTH, 1) }
 
         val tasksWithDates = tasks.filter { it.notificationDate.isNotBlank() }
-        val recurringTasks = tasks.filter { it.periodicityDaysWithTime.isNotEmpty() }
+        val repeatingTasks = tasks.filter { it.periodicityDaysWithTime.isNotEmpty() }
+
+        //get Date-TaskCount map for multicolor
+        val dateTaskMap = mutableMapOf<String, Int>()
+        val allTasksDates = tasksWithDates.map { it.notificationDate }.toSet()
+        tasksWithDates.forEach { task ->
+            val date = task.notificationDate
+            if (date in allTasksDates) {
+                dateTaskMap[date]?.let {
+                    dateTaskMap[date] = it + 1
+                } ?: run {
+                    dateTaskMap[date] = 1
+                }
+            }
+        }
 
         // Отображение обычных задач с конкретной датой
         tasksWithDates.forEach { task ->
             try {
                 val calendar = task.notificationDate.toCalendar()
                 val calendarDay = CalendarDay(calendar).apply {
-                    imageResource = if (task.isActive) R.drawable.im_notification_on else R.drawable.im_notification_off
+                    backgroundResource = R.color.light_green
+                    //imageResource = if (task.isActive) R.drawable.im_notification_on else R.drawable.im_notification_off
                     labelColor = R.color.primary
                 }
                 calendarDays.add(calendarDay)
@@ -130,33 +132,33 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
         }
 
         // Генерация отображаемых дней для повторяющихся задач
-        var temp = today.clone() as Calendar
-        while (temp.before(oneMonthLater)) {
-            val dayOfWeek = when (temp.get(Calendar.DAY_OF_WEEK)) {
-                Calendar.MONDAY -> DAYS.MONDAY
-                Calendar.TUESDAY -> DAYS.TUESDAY
-                Calendar.WEDNESDAY -> DAYS.WEDNESDAY
-                Calendar.THURSDAY -> DAYS.THURSDAY
-                Calendar.FRIDAY -> DAYS.FRIDAY
-                Calendar.SATURDAY -> DAYS.SATURDAY
-                Calendar.SUNDAY -> DAYS.SUNDAY
-                else -> null
-            }
-
-            dayOfWeek?.let { day ->
-                recurringTasks.forEach { task ->
-                    if (task.periodicityDaysWithTime.any { it.first == day }) {
-                        val calendarDay = CalendarDay(temp.clone() as Calendar).apply {
-                            imageResource = if (task.isActive) R.drawable.im_notification_on else R.drawable.im_notification_off
-                            labelColor = R.color.primary
-                        }
-                        calendarDays.add(calendarDay)
-                    }
-                }
-            }
-
-            temp.add(Calendar.DAY_OF_YEAR, 1)
-        }
+//        var temp = today.clone() as Calendar
+//        while (temp.before(oneMonthLater)) {
+//            val dayOfWeek = when (temp.get(Calendar.DAY_OF_WEEK)) {
+//                Calendar.MONDAY -> DAYS.MONDAY
+//                Calendar.TUESDAY -> DAYS.TUESDAY
+//                Calendar.WEDNESDAY -> DAYS.WEDNESDAY
+//                Calendar.THURSDAY -> DAYS.THURSDAY
+//                Calendar.FRIDAY -> DAYS.FRIDAY
+//                Calendar.SATURDAY -> DAYS.SATURDAY
+//                Calendar.SUNDAY -> DAYS.SUNDAY
+//                else -> null
+//            }
+//
+//            dayOfWeek?.let { day ->
+//                repeatingTasks.forEach { task ->
+//                    if (task.periodicityDaysWithTime.any { it.first == day }) {
+//                        val calendarDay = CalendarDay(temp.clone() as Calendar).apply {
+//                            imageResource = if (task.isActive) R.drawable.im_notification_on else R.drawable.im_notification_off
+//                            labelColor = R.color.primary
+//                        }
+//                        calendarDays.add(calendarDay)
+//                    }
+//                }
+//            }
+//
+//            temp.add(Calendar.DAY_OF_YEAR, 1)
+//        }
 
         binding.calendarView.setCalendarDays(calendarDays)
     }

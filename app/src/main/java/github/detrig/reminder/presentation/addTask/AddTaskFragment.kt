@@ -19,7 +19,6 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import github.detrig.reminder.core.AbstractFragment
 import github.detrig.reminder.di.ProvideViewModel
 import github.detrig.reminder.databinding.FragmentAddTaskBinding
-import github.detrig.reminder.domain.model.DAYS
 import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.presentation.TasksListViewModel
 import java.text.SimpleDateFormat
@@ -27,7 +26,9 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 import androidx.core.net.toUri
-import github.detrig.reminder.domain.model.toCalendar
+import androidx.core.os.bundleOf
+import com.applandeo.materialcalendarview.CalendarDay
+import github.detrig.reminder.domain.utils.DateUtil
 import github.detrig.reminder.domain.utils.TaskReminderReceiver
 import java.util.Date
 import java.util.TimeZone
@@ -35,11 +36,12 @@ import java.util.TimeZone
 class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
     private lateinit var viewModel: TasksListViewModel
+    private lateinit var clickedTask: Task
     private var selectedDate = Calendar.getInstance()
     private var selectedTime = Calendar.getInstance()
-    private val selectedDays = mutableMapOf<DAYS, Boolean>().apply {
-        DAYS.values().forEach { day -> put(day, false) }
-    }
+    private val selectedDays = mutableMapOf<Int, Boolean>()
+    private val calendar = Calendar.getInstance()
+    private val now = System.currentTimeMillis()
     private var selectedImageUri: Uri? = null
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -78,7 +80,10 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 //            binding.btnSave.isEnabled = text?.toString()?.isNotBlank() ?: false
 //        }
 
-        viewModel.clickedTaskLiveDataWrapper()?.let {
+        clickedTask = requireArguments().getSerializable("TASK_KEY") as Task
+        Log.d("alz-04", "task get: $clickedTask")
+
+        clickedTask?.let {
             if (it.title.isNotBlank()) {
                 binding.etTitle.setText(it.title)
                 binding.etDescription.setText(it.description)
@@ -87,13 +92,13 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
                 binding.headerOfTask.text = "Редактирование задачи"
                 it.periodicityDaysWithTime.forEach {
                     when (it.first) {
-                        DAYS.MONDAY -> binding.chipMonday.isChecked = true
-                        DAYS.TUESDAY -> binding.chipTuesday.isChecked = true
-                        DAYS.WEDNESDAY -> binding.chipWednesday.isChecked = true
-                        DAYS.THURSDAY -> binding.chipThursday.isChecked = true
-                        DAYS.FRIDAY -> binding.chipFriday.isChecked = true
-                        DAYS.SATURDAY -> binding.chipSaturday.isChecked = true
-                        DAYS.SUNDAY -> binding.chipSunday.isChecked = true
+                        Calendar.MONDAY -> binding.chipMonday.isChecked = true
+                        Calendar.TUESDAY -> binding.chipTuesday.isChecked = true
+                        Calendar.WEDNESDAY -> binding.chipWednesday.isChecked = true
+                        Calendar.THURSDAY -> binding.chipThursday.isChecked = true
+                        Calendar.FRIDAY -> binding.chipFriday.isChecked = true
+                        Calendar.SATURDAY -> binding.chipSaturday.isChecked = true
+                        Calendar.SUNDAY -> binding.chipSunday.isChecked = true
                     }
                 }
                 if (it.imageUri.isNotBlank()) {
@@ -117,31 +122,31 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
         }
 
         binding.chipMonday.setOnCheckedChangeListener { _, isChecked ->
-            selectedDays[DAYS.MONDAY] = isChecked
+            selectedDays[Calendar.MONDAY] = isChecked
         }
 
         binding.chipTuesday.setOnCheckedChangeListener { _, isChecked ->
-            selectedDays[DAYS.TUESDAY] = isChecked
+            selectedDays[Calendar.TUESDAY] = isChecked
         }
 
         binding.chipWednesday.setOnCheckedChangeListener { _, isChecked ->
-            selectedDays[DAYS.WEDNESDAY] = isChecked
+            selectedDays[Calendar.WEDNESDAY] = isChecked
         }
 
         binding.chipThursday.setOnCheckedChangeListener { _, isChecked ->
-            selectedDays[DAYS.THURSDAY] = isChecked
+            selectedDays[Calendar.THURSDAY] = isChecked
         }
 
         binding.chipFriday.setOnCheckedChangeListener { _, isChecked ->
-            selectedDays[DAYS.FRIDAY] = isChecked
+            selectedDays[Calendar.FRIDAY] = isChecked
         }
 
         binding.chipSaturday.setOnCheckedChangeListener { _, isChecked ->
-            selectedDays[DAYS.SATURDAY] = isChecked
+            selectedDays[Calendar.SATURDAY] = isChecked
         }
 
         binding.chipSunday.setOnCheckedChangeListener { _, isChecked ->
-            selectedDays[DAYS.SUNDAY] = isChecked
+            selectedDays[Calendar.SUNDAY] = isChecked
         }
 
         // Save button
@@ -159,7 +164,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             binding.TaskImage.visibility = View.GONE
             binding.btnRemoveImage.visibility = View.GONE
             binding.btnAddImage.text = "Добавить изображение"
-            val currentTask = viewModel.clickedTaskLiveDataWrapper() ?: Task()
+            val currentTask = clickedTask ?: Task()
             viewModel.updateTaskStatus(currentTask.copy(imageUri = ""))
         }
     }
@@ -238,7 +243,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
-        val clickedTask = viewModel.clickedTaskLiveDataWrapper() ?: Task()
+        val clickedTask = clickedTask
         var task = Task()
         if (clickedTask.id.isNotBlank()) {
             task = Task(
@@ -253,7 +258,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
                     .map { it.key to timeFormat.format(selectedTime.time) }
                     .toSet(),
                 imageUri = (selectedImageUri?.toString())
-                    ?: viewModel.clickedTaskLiveDataWrapper()?.imageUri ?: "",
+                    ?: clickedTask.imageUri ?: "",
                 isActive = true
             )
         } else {
@@ -272,8 +277,27 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
                 isActive = true
             )
         }
-        Log.d("alz-04", "task: $task")
-        viewModel.saveOrUpdateTask(task)
+
+        val allTasksList = mutableListOf<Task>().apply {
+            add(task) // Добавляем исходную задачу
+        }
+
+        task.periodicityDaysWithTime.forEach { (dayOfWeek, timeStr) ->
+            val dates = DateUtil.findDatesForDayInNext30Days(dayOfWeek)
+
+            dates.forEachIndexed { index, dateStr ->
+                val newTask = task.copy(
+                    id = task.id + allTasksList.size + 1,
+                    notificationDate = dateStr // или сохраняйте Calendar, если нужно
+                )
+                allTasksList.add(newTask)
+            }
+        }
+        Log.d("alz-04", "allTasksDate: ${allTasksList.map { it.notificationDate }}")
+
+
+        viewModel.saveOrUpdateTask(allTasksList)
+
 
         val triggerDate = selectedDate.time
         val now = System.currentTimeMillis()
@@ -286,7 +310,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             Log.w("alz-debug", "Trigger time is in the past, skipping scheduling.")
         }
 
-        scheduleRecurringNotificationsForMonth(requireContext(), task)
+        //scheduleRecurringNotificationsForMonth(requireContext(), task)
     }
 
 
@@ -336,8 +360,6 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
     private fun scheduleRecurringNotificationsForMonth(context: Context, task: Task) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val calendar = Calendar.getInstance()
-        val now = System.currentTimeMillis()
 
         // Месяц вперед от текущей даты
         val endDate = Calendar.getInstance().apply {
@@ -346,15 +368,6 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
         // Для каждого дня в периодичности
         task.periodicityDaysWithTime.forEach { (dayOfWeek, timeStr) ->
-            val dayOfWeekInt = when (dayOfWeek) {
-                DAYS.MONDAY -> Calendar.MONDAY
-                DAYS.TUESDAY -> Calendar.TUESDAY
-                DAYS.WEDNESDAY -> Calendar.WEDNESDAY
-                DAYS.THURSDAY -> Calendar.THURSDAY
-                DAYS.FRIDAY -> Calendar.FRIDAY
-                DAYS.SATURDAY -> Calendar.SATURDAY
-                DAYS.SUNDAY -> Calendar.SUNDAY
-            }
 
             // Парсим время (формат "HH:mm")
             val timeParts = timeStr.split(":")
@@ -369,7 +382,7 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             calendar.set(Calendar.MILLISECOND, 0)
 
             // Переходим к следующему указанному дню недели
-            while (calendar.get(Calendar.DAY_OF_WEEK) != dayOfWeekInt) {
+            while (calendar.get(Calendar.DAY_OF_WEEK) != dayOfWeek) {
                 calendar.add(Calendar.DAY_OF_MONTH, 1)
             }
 
@@ -412,45 +425,35 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
         }
     }
 
-    private fun getSelectedDays(): MutableMap<DAYS, Boolean> {
-        val selectedDays_check = mutableMapOf<DAYS, Boolean>()
-
+    private fun getSelectedDays(): MutableMap<Int, Boolean> { //DAY - isChecked
+        val selectedDays_check = mutableMapOf<Int, Boolean>()
 
         if (binding.chipMonday.isChecked == true) {
-            selectedDays_check[DAYS.MONDAY] = true
+            selectedDays_check[Calendar.MONDAY] = true
         }
         if (binding.chipTuesday.isChecked) {
-            selectedDays_check[DAYS.TUESDAY] = true
+            selectedDays_check[Calendar.TUESDAY] = true
         }
         if (binding.chipWednesday.isChecked) {
-            selectedDays_check[DAYS.WEDNESDAY] = true
+            selectedDays_check[Calendar.WEDNESDAY] = true
         }
         if (binding.chipThursday.isChecked) {
-            selectedDays_check[DAYS.THURSDAY] = true
+            selectedDays_check[Calendar.THURSDAY] = true
         }
         if (binding.chipFriday.isChecked) {
-            selectedDays_check[DAYS.FRIDAY] = true
+            selectedDays_check[Calendar.FRIDAY] = true
         }
         if (binding.chipSaturday.isChecked) {
-            selectedDays_check[DAYS.SATURDAY] = true
+            selectedDays_check[Calendar.SATURDAY] = true
         }
         if (binding.chipSunday.isChecked) {
-            selectedDays_check[DAYS.SUNDAY] = true
+            selectedDays_check[Calendar.SUNDAY] = true
         }
 
         return selectedDays_check
     }
 
-    fun parseDateTime(date: String, time: String): Long {
-        val combined = "$date $time" // например, "2025-05-29 04:21"
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        sdf.timeZone = TimeZone.getDefault()
-        val dateObj = sdf.parse(combined)
-        return dateObj?.time ?: 0L
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-
     }
 }

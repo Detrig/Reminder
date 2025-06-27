@@ -12,7 +12,6 @@ class TasksListModule(private val core: Core) : Module<TasksListViewModel> {
             core.clearViewModel,
             core.navigation,
             core.taskRepository,
-            core.clickedTaskLiveDataWrapper,
             core.allTasksLiveDataWrapper,
             core.viewModelScope
         )
