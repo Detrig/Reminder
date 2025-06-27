@@ -7,7 +7,6 @@ import github.detrig.reminder.core.Screen
 import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.domain.repository.TaskRepository
 import github.detrig.reminder.domain.utils.AllTasksLiveDataWrapper
-import github.detrig.reminder.domain.utils.ClickedTaskLiveDataWrapper
 import github.detrig.reminder.presentation.addTask.AddTaskScreen
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -21,21 +20,19 @@ class TasksListViewModel(
     private val clearViewModel: ClearViewModel,
     private val navigation: Navigation,
     private val taskRepository: TaskRepository,
-    private val clickedTaskLiveDataWrapper : ClickedTaskLiveDataWrapper,
-    private val allTasksLiveDataWrapper : AllTasksLiveDataWrapper,
+    private val allTasksLiveDataWrapper: AllTasksLiveDataWrapper,
     private val viewModelScope: CoroutineScope,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
     private val dispatcherIo: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
     init {
         getAllTasks()
     }
 
-
     fun tasksLiveData() = allTasksLiveDataWrapper.liveData()
-    fun clickedTaskLiveDataWrapper() = clickedTaskLiveDataWrapper.liveData().value
 
     fun getAllTasks() {
         viewModelScope.launch(dispatcherIo) {
@@ -48,17 +45,7 @@ class TasksListViewModel(
         }
     }
 
-//    fun addTask(task: Task) {
-//        viewModelScope.launch(dispatcherIo) {
-//            taskRepository.insertTask(task)
-//            Log.d("alz-04", "task added: $task")
-//            withContext(dispatcherMain) {
-//                navigation.update(Screen.Pop)
-//            }
-//        }
-//    }
-
-    fun deleteTask(task : Task) {
+    fun deleteTask(task: Task) {
         viewModelScope.launch(dispatcherIo) {
             taskRepository.deleteTask(task)
             withContext(dispatcherMain) {
@@ -70,25 +57,28 @@ class TasksListViewModel(
         }
     }
 
-    fun saveOrUpdateTask(task: Task) {
+    fun saveOrUpdateTask(tasks: List<Task>) {
         viewModelScope.launch(dispatcherIo) {
-            val existingTask = taskRepository.getTaskById(task.id)
+            tasks.forEach { task ->
+                val existingTask = taskRepository.getTaskById(task.id)
 
-            if (existingTask != null) {
-                taskRepository.updateTask(task)
-            } else {
-                taskRepository.insertTask(task)
+                if (existingTask != null) {
+                    taskRepository.updateTask(task)
+                } else {
+                    taskRepository.insertTask(task)
+                }
             }
-
             withContext(dispatcherMain) {
                 val currentList =
                     allTasksLiveDataWrapper.liveData().value?.toMutableList() ?: mutableListOf()
-                val index = currentList.indexOfFirst { it.id == task.id }
 
-                if (index != -1) {
-                    currentList[index] = task
-                } else {
-                    currentList.add(task)
+                tasks.forEach { task ->
+                    val index = currentList.indexOfFirst { it.id == task.id }
+                    if (index != -1) {
+                        currentList[index] = task
+                    } else {
+                        currentList.add(task)
+                    }
                 }
 
                 allTasksLiveDataWrapper.update(currentList)
@@ -123,28 +113,20 @@ class TasksListViewModel(
         }
     }
 
-    fun getTasksByDate(date: String) : List<Task> {
-//        viewModelScope.launch(dispatcherIo) {
-//            val tasksForDate = taskRepository.getTasksByDate(date)
-//            withContext(dispatcherMain) {
-//                _tasksForClickedDate.value = tasksForDate
-//            }
-//        }
+    fun getTasksByDate(date: String): List<Task> {
         val allTasks = allTasksLiveDataWrapper.liveData().value ?: emptyList()
         val tasksForDate = allTasks.filter { it.notificationDate == date }
         return tasksForDate
     }
 
 
-
     fun addTaskScreen(task: Task) {
         if (task.title.isNotBlank()) {
-            clickedTaskLiveDataWrapper.update(task)
-            navigation.update(AddTaskScreen)
+            navigation.update(AddTaskScreen(task))
         } else {
-            clickedTaskLiveDataWrapper.update(Task())
-            navigation.update(AddTaskScreen)
+            navigation.update(AddTaskScreen(Task()))
         }
     }
+
     fun backToPreviousScreen() = navigation.update(Screen.Pop)
 }

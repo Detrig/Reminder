@@ -1,6 +1,7 @@
 package github.detrig.reminder.domain.model
 
 import com.applandeo.materialcalendarview.CalendarDay
+import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -12,14 +13,10 @@ data class Task(
     val notificationText: String = "",
     val notificationTime: String = "",
     val notificationDate: String = "",
-    val periodicityDaysWithTime: Set<Pair<DAYS, String>> = setOf(), //Day, time
+    val periodicityDaysWithTime: Set<Pair<Int, String>> = setOf(), //Calendar.Day, time
     val imageUri: String = "",
     val isActive: Boolean = true
-)
-
-enum class DAYS {
-    MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
-}
+) : Serializable
 
 fun CalendarDay.toTaskDateFormat(): String {
     val calendar = this.calendar

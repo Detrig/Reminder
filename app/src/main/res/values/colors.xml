@@ -5,10 +5,15 @@
 
     <color name="primary">#3F51B5</color>
     <color name="light_green">#90a955</color>
+    <color name="green_level_1">#009300</color>
+    <color name="green_level_2">#0c0</color>
+    <color name="green_level_3">#00ed00</color>
+    <color name="green_level_4">#16ff16</color>
     <color name="light_red">#e5383b</color>
     <color name="light_gray">#ededed</color>
 
 
     <color name="bottom_nav_background">#FFFFFFFF</color>
+    <color name="medium_gray">#86888A</color>
 
 </resources>
