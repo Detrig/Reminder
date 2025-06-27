@@ -114,12 +114,6 @@ class TasksListViewModel(
     }
 
     fun getTasksByDate(date: String): List<Task> {
-//        viewModelScope.launch(dispatcherIo) {
-//            val tasksForDate = taskRepository.getTasksByDate(date)
-//            withContext(dispatcherMain) {
-//                _tasksForClickedDate.value = tasksForDate
-//            }
-//        }
         val allTasks = allTasksLiveDataWrapper.liveData().value ?: emptyList()
         val tasksForDate = allTasks.filter { it.notificationDate == date }
         return tasksForDate

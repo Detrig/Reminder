@@ -17,7 +17,9 @@ import github.detrig.reminder.domain.model.toCalendar
 import github.detrig.reminder.domain.model.toTaskDateFormat
 import github.detrig.reminder.presentation.TasksListViewModel
 import github.detrig.reminder.presentation.tasksList.TasksRcViewAdapter
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 
 class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
@@ -41,18 +43,8 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
         binding.calendarView.setOnCalendarDayClickListener(object : OnCalendarDayClickListener {
             override fun onClick(calendarDay: CalendarDay) {
                 clickedDate = calendarDay.toTaskDateFormat()
-                val clickedCalendar = calendarDay.calendar
 
                 val tasksForDate = viewModel.getTasksByDate(clickedDate).toMutableList()
-
-//                // Добавим задачи с повторением, если совпадает день недели
-//                calendarDay?.let { day ->
-//                    viewModel.tasksLiveData().value?.forEach { task ->
-//                        if (task.periodicityDaysWithTime.any { it.first == day }) {
-//                            tasksForDate.add(task)
-//                        }
-//                    }
-//                }
 
                 tasksRcViewAdapter.update(ArrayList(tasksForDate))
             }
@@ -96,69 +88,60 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
 
     private fun updateCalendar(tasks: List<Task>) {
         val calendarDays = ArrayList<CalendarDay>()
-        val today = Calendar.getInstance()
-        val oneMonthLater = Calendar.getInstance().apply { add(Calendar.MONTH, 1) }
-
         val tasksWithDates = tasks.filter { it.notificationDate.isNotBlank() }
-        val repeatingTasks = tasks.filter { it.periodicityDaysWithTime.isNotEmpty() }
 
+        //Set color workload for date
         //get Date-TaskCount map for multicolor
-        val dateTaskMap = mutableMapOf<String, Int>()
+        val dateTaskMap = mutableMapOf<String, List<Task>>()
         val allTasksDates = tasksWithDates.map { it.notificationDate }.toSet()
         tasksWithDates.forEach { task ->
             val date = task.notificationDate
             if (date in allTasksDates) {
                 dateTaskMap[date]?.let {
-                    dateTaskMap[date] = it + 1
+                    val list = dateTaskMap[date]!!.toMutableList()
+                    list.add(task)
+                    dateTaskMap[date] = list
                 } ?: run {
-                    dateTaskMap[date] = 1
+                    dateTaskMap[date] = listOf(task)
                 }
             }
         }
+        Log.d("alz-04", "dateTaskMap: $dateTaskMap")
 
-        // Отображение обычных задач с конкретной датой
-        tasksWithDates.forEach { task ->
+        dateTaskMap.forEach { (date, tasksForDateList) ->
             try {
-                val calendar = task.notificationDate.toCalendar()
-                val calendarDay = CalendarDay(calendar).apply {
-                    backgroundResource = R.color.light_green
-                    //imageResource = if (task.isActive) R.drawable.im_notification_on else R.drawable.im_notification_off
-                    labelColor = R.color.primary
+                val calendar = date.toCalendar()
+
+                val backgroundRes: Int = when (tasksForDateList.count()) {
+                    1, 2 -> R.drawable.calendar_workload_status_level_1
+                    3, 4 -> R.drawable.calendar_workload_status_level_2
+                    5, 6 -> R.drawable.calendar_workload_status_level_3
+                    else -> R.drawable.calendar_workload_status_level_4
                 }
+
+                var isAllTasksForDateDone = true
+                for (task in tasksForDateList) {
+                    if (task.isActive) {
+                        isAllTasksForDateDone = false
+                        break
+                    }
+                }
+
+                val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .format(Calendar.getInstance().time)
+                Log.d("alz-04", "today: $today, date: $date")
+                val calendarDay = CalendarDay(calendar).apply {
+                    labelColor = R.color.white
+                    backgroundResource = backgroundRes
+                    if (date < today)
+                        imageResource = if (isAllTasksForDateDone) R.drawable.ic_done_all else R.drawable.ic_cross
+                }
+
                 calendarDays.add(calendarDay)
             } catch (e: Exception) {
-                Log.e("Calendar", "Error parsing date: ${task.notificationDate}", e)
+                Log.e("Calendar", "Error parsing date: $date", e)
             }
         }
-
-        // Генерация отображаемых дней для повторяющихся задач
-//        var temp = today.clone() as Calendar
-//        while (temp.before(oneMonthLater)) {
-//            val dayOfWeek = when (temp.get(Calendar.DAY_OF_WEEK)) {
-//                Calendar.MONDAY -> DAYS.MONDAY
-//                Calendar.TUESDAY -> DAYS.TUESDAY
-//                Calendar.WEDNESDAY -> DAYS.WEDNESDAY
-//                Calendar.THURSDAY -> DAYS.THURSDAY
-//                Calendar.FRIDAY -> DAYS.FRIDAY
-//                Calendar.SATURDAY -> DAYS.SATURDAY
-//                Calendar.SUNDAY -> DAYS.SUNDAY
-//                else -> null
-//            }
-//
-//            dayOfWeek?.let { day ->
-//                repeatingTasks.forEach { task ->
-//                    if (task.periodicityDaysWithTime.any { it.first == day }) {
-//                        val calendarDay = CalendarDay(temp.clone() as Calendar).apply {
-//                            imageResource = if (task.isActive) R.drawable.im_notification_on else R.drawable.im_notification_off
-//                            labelColor = R.color.primary
-//                        }
-//                        calendarDays.add(calendarDay)
-//                    }
-//                }
-//            }
-//
-//            temp.add(Calendar.DAY_OF_YEAR, 1)
-//        }
 
         binding.calendarView.setCalendarDays(calendarDays)
     }
