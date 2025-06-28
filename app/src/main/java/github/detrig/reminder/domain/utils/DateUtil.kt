@@ -45,7 +45,6 @@ object DateUtil {
             set(Calendar.MILLISECOND, 0)
         }
 
-        Log.d("alz-04", "time: ${calendar.timeInMillis}")
         return calendar.timeInMillis
     }
 }

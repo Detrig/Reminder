@@ -1,6 +1,5 @@
 package github.detrig.reminder.core
 
-import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 

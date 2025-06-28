@@ -12,7 +12,7 @@ import github.detrig.reminder.di.ViewModelFactory
 class App : Application(), ProvideViewModel {
 
     private lateinit var factory: ViewModelFactory
-    private lateinit var core: Core
+    lateinit var core: Core
 
     override fun onCreate() {
         super.onCreate()

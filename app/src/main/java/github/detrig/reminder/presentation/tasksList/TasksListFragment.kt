@@ -12,6 +12,7 @@ import github.detrig.reminder.di.ProvideViewModel
 import github.detrig.reminder.databinding.FragmentTasksListBinding
 import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.presentation.TasksListViewModel
+import github.detrig.reminder.presentation.widgets.WidgetUpdater
 
 class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
 
@@ -54,14 +55,18 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
                         .setTitle("Удаление задачи")
                         .setMessage("Вы уверены, что хотите удалить задачу?")
                         .setPositiveButton("Удалить") { _, _ ->
-                            viewModel.deleteTask(task)
+                            viewModel.deleteTask(task).apply {
+                                WidgetUpdater.update(requireContext())
+                            }
                         }
                         .setNegativeButton("Отмена", null)
                         .show()
                 }
 
                 override fun onStatusChangeClick(task: Task) {
-                    viewModel.updateTaskStatus(task.copy(isActive = !task.isActive))
+                    viewModel.updateTaskStatus(task.copy(isActive = !task.isActive)).apply {
+                        WidgetUpdater.update(requireContext())
+                    }
                 }
 
                 override fun onSelectionChanged(selectedCount: Int) {
@@ -94,7 +99,9 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
             )
             .setPositiveButton("Удалить") { _, _ ->
                 tasks.forEach {
-                    viewModel.deleteTask(it)
+                    viewModel.deleteTask(it).apply {
+                        WidgetUpdater.update(requireContext())
+                    }
                 }
                 dateTasksRcViewAdapter.clearSelection()
                 updateDeleteButton()

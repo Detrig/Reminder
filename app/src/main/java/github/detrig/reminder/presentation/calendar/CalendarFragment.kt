@@ -17,6 +17,7 @@ import github.detrig.reminder.domain.model.toCalendar
 import github.detrig.reminder.domain.model.toTaskDateFormat
 import github.detrig.reminder.presentation.TasksListViewModel
 import github.detrig.reminder.presentation.tasksList.TasksUnifiedRcViewAdapter
+import github.detrig.reminder.presentation.widgets.WidgetUpdater
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -73,7 +74,9 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
                     .setTitle("Удаление задачи")
                     .setMessage("Вы уверены, что хотите удалить задачу?")
                     .setPositiveButton("Удалить") { _, _ ->
-                        viewModel.deleteTask(task)
+                        viewModel.deleteTask(task).apply {
+                            WidgetUpdater.update(requireContext())
+                        }
                     }
                     .setNegativeButton("Отмена", null)
                     .show()
@@ -181,6 +184,7 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
                 tasks.forEach {
                     viewModel.deleteTask(it)
                 }
+                WidgetUpdater.update(requireContext())
                 tasksRcViewAdapter.clearSelection()
                 updateDeleteButton()
             }

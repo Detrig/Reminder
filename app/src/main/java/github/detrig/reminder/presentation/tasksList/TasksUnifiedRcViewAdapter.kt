@@ -37,16 +37,13 @@ class TasksUnifiedRcViewAdapter(
 
 
     fun update(newTasks: List<Task>) {
-        Log.d("alz-04", "newTasks: $newTasks")
         val grouped = newTasks.groupBy { it.notificationDate.substringBefore(" ") }
             .toSortedMap()
 
-        Log.d("alz-04", "grouped: $grouped")
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             .format(Calendar.getInstance().time)
 
         val filtered = grouped.filterKeys { it >= today }
-        Log.d("alz-04", "filtered: $filtered")
 
         val newItems = mutableListOf<ListItem>()
         for ((date, tasks) in filtered) {
@@ -55,7 +52,6 @@ class TasksUnifiedRcViewAdapter(
                 newItems.add(ListItem.TaskItem(task))
             }
         }
-        Log.d("alz-04", "newItems: $newItems")
         val diffCallback = DiffUtilCallBack(items, newItems, selectedItems, selectedItems)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
 

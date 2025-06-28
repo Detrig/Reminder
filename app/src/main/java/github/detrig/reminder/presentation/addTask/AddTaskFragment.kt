@@ -32,6 +32,7 @@ import androidx.work.workDataOf
 import github.detrig.reminder.domain.utils.DateUtil
 import github.detrig.reminder.domain.utils.TaskNotificationWorker
 import github.detrig.reminder.domain.utils.TaskReminderReceiver
+import github.detrig.reminder.presentation.widgets.WidgetUpdater
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -268,7 +269,9 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
         val allTasksList = mutableListOf<Task>().apply {
             add(task) // Добавляем исходную задачу
+            WidgetUpdater.update(requireContext())
         }
+
 
         task.periodicityDaysWithTime.forEach { (dayOfWeek, timeStr) ->
             val dates = DateUtil.findDatesForDayInNext30Days(dayOfWeek)
@@ -282,7 +285,9 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             }
         }
 
-        viewModel.saveOrUpdateTask(allTasksList)
+        viewModel.saveOrUpdateTask(allTasksList).apply {
+            WidgetUpdater.update(requireContext())
+        }
 
 //        allTasksList.forEach { task ->
 //            viewModel.setReminder(
