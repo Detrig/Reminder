@@ -16,7 +16,7 @@ import github.detrig.reminder.domain.model.Task
 import github.detrig.reminder.domain.model.toCalendar
 import github.detrig.reminder.domain.model.toTaskDateFormat
 import github.detrig.reminder.presentation.TasksListViewModel
-import github.detrig.reminder.presentation.tasksList.TasksRcViewAdapter
+import github.detrig.reminder.presentation.tasksList.TasksUnifiedRcViewAdapter
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -25,7 +25,8 @@ import java.util.Locale
 class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
 
     private lateinit var viewModel: TasksListViewModel
-    private lateinit var tasksRcViewAdapter: TasksRcViewAdapter
+    private lateinit var tasksRcViewAdapter: TasksUnifiedRcViewAdapter
+    private var previousClickedDate = ""
     private var clickedDate = ""
 
     override fun bind(
@@ -43,10 +44,14 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
         binding.calendarView.setOnCalendarDayClickListener(object : OnCalendarDayClickListener {
             override fun onClick(calendarDay: CalendarDay) {
                 clickedDate = calendarDay.toTaskDateFormat()
-
                 val tasksForDate = viewModel.getTasksByDate(clickedDate).toMutableList()
 
                 tasksRcViewAdapter.update(ArrayList(tasksForDate))
+                if (previousClickedDate != clickedDate) {
+                    tasksRcViewAdapter.clearSelection()
+                    updateDeleteButton()
+                }
+                previousClickedDate = clickedDate
             }
         })
 
@@ -58,7 +63,7 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
     }
 
     private fun initViews() {
-        tasksRcViewAdapter = TasksRcViewAdapter(object : TasksRcViewAdapter.OnTaskClickListener {
+        tasksRcViewAdapter = TasksUnifiedRcViewAdapter(object : TasksUnifiedRcViewAdapter.OnTaskClickListener {
             override fun onClick(task: Task) {
                 viewModel.addTaskScreen(task)
             }
@@ -77,13 +82,29 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
             override fun onStatusChangeClick(task: Task) {
                 viewModel.updateTaskStatus(task.copy(isActive = !task.isActive))
             }
+
+            override fun onSelectionChanged(selectedCount: Int) {
+                updateDeleteButton()
+            }
+
+            override fun onActivateSelectionMode() {
+                tasksRcViewAdapter.isSelectionMode = true
+            }
         })
         binding.tasksRView.adapter = tasksRcViewAdapter
-
 
         viewModel.tasksLiveData().value?.let { tasks ->
             updateCalendar(tasks)
         }
+
+        binding.deleteTasksButton.setOnClickListener {
+            showDeleteDialog(tasksRcViewAdapter.getSelectedItems())
+        }
+    }
+
+    private fun updateDeleteButton() {
+        val selectedCount = tasksRcViewAdapter.getSelectedItems().size
+        binding.deleteTasksButton.visibility = if (selectedCount > 0) View.VISIBLE else View.GONE
     }
 
     private fun updateCalendar(tasks: List<Task>) {
@@ -145,5 +166,25 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
         }
 
         binding.calendarView.setCalendarDays(calendarDays)
+    }
+
+    private fun showDeleteDialog(tasks: List<Task>) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(if (tasks.size > 1) "Удаление задач" else "Удаление задачи")
+            .setMessage(
+                if (tasks.size > 1)
+                    "Вы уверены, что хотите удалить выбранные задачи?"
+                else
+                    "Вы уверены, что хотите удалить задачу?"
+            )
+            .setPositiveButton("Удалить") { _, _ ->
+                tasks.forEach {
+                    viewModel.deleteTask(it)
+                }
+                tasksRcViewAdapter.clearSelection()
+                updateDeleteButton()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 }

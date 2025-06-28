@@ -16,7 +16,7 @@ import github.detrig.reminder.presentation.TasksListViewModel
 class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
 
     private lateinit var viewModel: TasksListViewModel
-    private lateinit var dateTasksRcViewAdapter: DateTasksRcViewAdapter
+    private lateinit var dateTasksRcViewAdapter: TasksUnifiedRcViewAdapter
 
     override fun bind(
         inflater: LayoutInflater,
@@ -42,31 +42,70 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
     }
 
     private fun initViews() {
-        dateTasksRcViewAdapter = DateTasksRcViewAdapter(object : TasksRcViewAdapter.OnTaskClickListener {
-            override fun onClick(task: Task) {
-                viewModel.addTaskScreen(task)
-            }
+        dateTasksRcViewAdapter =
+            TasksUnifiedRcViewAdapter(object : TasksUnifiedRcViewAdapter.OnTaskClickListener {
+                override fun onClick(task: Task) {
+                    if (!dateTasksRcViewAdapter.isSelectionMode)
+                        viewModel.addTaskScreen(task)
+                }
 
-            override fun onDeleteClick(task: Task) {
-                AlertDialog.Builder(requireContext())
-                    .setTitle("Удаление задачи")
-                    .setMessage("Вы уверены, что хотите удалить задачу?")
-                    .setPositiveButton("Удалить") { _, _ ->
-                        viewModel.deleteTask(task)
-                    }
-                    .setNegativeButton("Отмена", null)
-                    .show()
-            }
+                override fun onDeleteClick(task: Task) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Удаление задачи")
+                        .setMessage("Вы уверены, что хотите удалить задачу?")
+                        .setPositiveButton("Удалить") { _, _ ->
+                            viewModel.deleteTask(task)
+                        }
+                        .setNegativeButton("Отмена", null)
+                        .show()
+                }
 
-            override fun onStatusChangeClick(task: Task) {
-                viewModel.updateTaskStatus(task.copy(isActive = !task.isActive))
-            }
-        })
+                override fun onStatusChangeClick(task: Task) {
+                    viewModel.updateTaskStatus(task.copy(isActive = !task.isActive))
+                }
+
+                override fun onSelectionChanged(selectedCount: Int) {
+                    updateDeleteButton()
+                }
+
+                override fun onActivateSelectionMode() {
+                    dateTasksRcViewAdapter.isSelectionMode = true
+                }
+            })
         binding.tasksWithDateRcView.adapter = dateTasksRcViewAdapter
 
         binding.addTaskButton.setOnClickListener {
             viewModel.addTaskScreen(Task())
         }
+
+        binding.deleteTasksButton.setOnClickListener {
+            showDeleteDialog(dateTasksRcViewAdapter.getSelectedItems())
+        }
+    }
+
+    private fun showDeleteDialog(tasks: List<Task>) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(if (tasks.size > 1) "Удаление задач" else "Удаление задачи")
+            .setMessage(
+                if (tasks.size > 1)
+                    "Вы уверены, что хотите удалить выбранные задачи?"
+                else
+                    "Вы уверены, что хотите удалить задачу?"
+            )
+            .setPositiveButton("Удалить") { _, _ ->
+                tasks.forEach {
+                    viewModel.deleteTask(it)
+                }
+                dateTasksRcViewAdapter.clearSelection()
+                updateDeleteButton()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun updateDeleteButton() {
+        val selectedCount = dateTasksRcViewAdapter.getSelectedItems().size
+        binding.deleteTasksButton.visibility = if (selectedCount > 0) View.VISIBLE else View.GONE
     }
 
     //Debug
@@ -79,14 +118,13 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
             return
         }
 
-        Log.d("alz-04", "Запланированные уведомления:")
+        //Log.d("alz-04", "Запланированные уведомления:")
         allEntries.forEach { (key, value) ->
             if (key.startsWith("task_")) {
                 val taskId = key.removePrefix("task_")
                 val workId = value.toString()
-                Log.d("alz-04", "Task ID: $taskId, WorkManager ID: $workId")
+               // Log.d("alz-04", "Task ID: $taskId, WorkManager ID: $workId")
             }
         }
     }
 }
-

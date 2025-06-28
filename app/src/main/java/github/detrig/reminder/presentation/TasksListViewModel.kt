@@ -51,6 +51,7 @@ class TasksListViewModel(
     fun deleteTask(task: Task) {
         viewModelScope.launch(dispatcherIo) {
             taskRepository.deleteTask(task)
+            cancelReminder(task)
             withContext(dispatcherMain) {
                 val allTasksList =
                     allTasksLiveDataWrapper.liveData().value?.toMutableList() ?: mutableListOf()

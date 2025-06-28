@@ -9,7 +9,7 @@
         android:id="@+id/taskCardView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/light_gray"
+        android:backgroundTint="@null"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
         app:cardUseCompatPadding="true"
@@ -57,19 +57,6 @@
                 app:layout_constraintStart_toEndOf="@+id/taskImage"
                 app:layout_constraintTop_toTopOf="@+id/taskImage"
                 tools:text="Название задачи Название задачи Название ссссссзадачи Название задачи Название задачи" />
-
-            <!--            <TextView-->
-            <!--                android:id="@+id/taskDescriptionTV"-->
-            <!--                style="@style/TextViewRegularStyle"-->
-            <!--                android:layout_width="0dp"-->
-            <!--                android:layout_height="wrap_content"-->
-            <!--                android:layout_marginStart="8dp"-->
-            <!--                android:layout_marginTop="4dp"-->
-            <!--                android:maxLines="2"-->
-            <!--                app:layout_constraintEnd_toStartOf="@+id/imageButton"-->
-            <!--                app:layout_constraintStart_toEndOf="@+id/taskImage"-->
-            <!--                app:layout_constraintTop_toBottomOf="@+id/taskTitleTV"-->
-            <!--                tools:text="Описание задачи Описание задачи Описание задачи Описание задачи Описание задачи" />-->
 
             <TextView
                 android:id="@+id/statusTV"
