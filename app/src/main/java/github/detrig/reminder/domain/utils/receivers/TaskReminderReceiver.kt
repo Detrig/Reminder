@@ -2,6 +2,7 @@ package github.detrig.reminder.domain.utils.receivers
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -11,6 +12,7 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import github.detrig.reminder.R
+import github.detrig.reminder.presentation.main.MainActivity
 
 class TaskReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
@@ -74,6 +76,23 @@ class TaskReminderReceiver : BroadcastReceiver() {
             e.printStackTrace()
             Log.e("alz-04", "Notification image error", e)
         }
+
+        val timestamp = intent?.getStringExtra("notificationDate")
+        val calendarIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("NOTIFICATION_DATE_KEY", timestamp)
+        }
+
+        // PendingIntent, сработает при клике по уведомлению
+        val contentIntent = PendingIntent.getActivity(
+            context,
+            0,
+            calendarIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // Привязываем к уведомлению
+        notificationBuilder.setContentIntent(contentIntent)
 
         notificationManager.notify(1001, notificationBuilder.build())
     }

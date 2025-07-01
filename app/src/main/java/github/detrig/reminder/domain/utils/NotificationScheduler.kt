@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import github.detrig.reminder.domain.model.Task
 import androidx.core.content.edit
@@ -26,6 +25,7 @@ class NotificationScheduler(
             putExtra("title", task.title)
             putExtra("text", task.notificationText)
             putExtra("imageUri", task.imageUri)
+            putExtra("notificationDate", task.notificationDate)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

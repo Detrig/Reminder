@@ -18,5 +18,5 @@ class MainViewModel(
 
     fun tasksListScreen() = navigation.update(TasksListScreen)
 
-    fun calendarScreen() = navigation.update(CalendarScreen)
+    fun calendarScreen(notificationDate : String = "") = navigation.update(CalendarScreen(notificationDate))
 }

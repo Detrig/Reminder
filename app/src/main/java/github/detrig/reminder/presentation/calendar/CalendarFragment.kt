@@ -40,7 +40,6 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
 
         viewModel = (activity as ProvideViewModel).viewModel(TasksListViewModel::class.java)
 
-
         initViews()
         binding.calendarView.setOnCalendarDayClickListener(object : OnCalendarDayClickListener {
             override fun onClick(calendarDay: CalendarDay) {
@@ -102,6 +101,18 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
 
         binding.deleteTasksButton.setOnClickListener {
             showDeleteDialog(tasksRcViewAdapter.getSelectedItems())
+        }
+
+        showTasksForDateFromNotification()
+    }
+
+    private fun showTasksForDateFromNotification() {
+        val notificationDate = requireArguments().getString("NOTIFICATION_DATE_KEY", "")
+        if (notificationDate != "") {
+            val tasksForDate = viewModel.getTasksByDate(notificationDate).toMutableList()
+            tasksRcViewAdapter.update(ArrayList(tasksForDate))
+            clickedDate = notificationDate
+            previousClickedDate = clickedDate
         }
     }
 

@@ -25,6 +25,7 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 import androidx.core.net.toUri
+import com.google.android.material.timepicker.TimeFormat
 import github.detrig.reminder.domain.utils.DateUtil
 import github.detrig.reminder.presentation.widgets.WidgetUpdater
 import java.util.Date
@@ -198,10 +199,15 @@ class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
             selectedTime.get(Calendar.HOUR_OF_DAY) to selectedTime.get(Calendar.MINUTE)
         }
 
+        //Выбор формата устройства
+        val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+        val format = if (is24Hour) TimeFormat.CLOCK_24H else TimeFormat.CLOCK_12H
+
         val timePicker = MaterialTimePicker.Builder()
             .setTitleText("Выберите время")
             .setHour(hour)
             .setMinute(minute)
+            .setTimeFormat(format)
             .build()
 
         timePicker.addOnPositiveButtonClickListener {

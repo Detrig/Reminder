@@ -30,10 +30,11 @@ class MainActivity : AppCompatActivity(), ProvideViewModel {
 
         viewModel = viewModel(MainViewModel::class.java)
 
+        isNotificationClicked(savedInstanceState)
+
         viewModel.navigationLiveData().observe(this) { screen ->
             screen.show(supportFragmentManager, R.id.fragmentContainer)
         }
-        viewModel.init(savedInstanceState == null)
 
         binding.bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -55,6 +56,16 @@ class MainActivity : AppCompatActivity(), ProvideViewModel {
                     1001
                 )
             }
+        }
+    }
+
+    private fun isNotificationClicked(savedInstanceState: Bundle?) {
+        val notificationDate = intent.getStringExtra("NOTIFICATION_DATE_KEY")
+        Log.d("alz-04", "notificationDate: $notificationDate")
+        if (notificationDate != null) {
+            viewModel.calendarScreen(notificationDate)
+        } else {
+            viewModel.init(savedInstanceState == null)
         }
     }
 
