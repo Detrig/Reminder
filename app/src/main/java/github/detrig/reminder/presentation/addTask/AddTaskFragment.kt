@@ -25,16 +25,9 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
 import androidx.core.net.toUri
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.OutOfQuotaPolicy
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import github.detrig.reminder.domain.utils.DateUtil
-import github.detrig.reminder.domain.utils.TaskNotificationWorker
-import github.detrig.reminder.domain.utils.TaskReminderReceiver
 import github.detrig.reminder.presentation.widgets.WidgetUpdater
 import java.util.Date
-import java.util.concurrent.TimeUnit
 
 class AddTaskFragment : AbstractFragment<FragmentAddTaskBinding>() {
 
