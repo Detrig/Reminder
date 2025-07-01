@@ -1,4 +1,4 @@
-package github.detrig.reminder.domain.utils
+package github.detrig.reminder.domain.utils.receivers
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.bumptech.glide.Glide
 import github.detrig.reminder.R
 
 class TaskReminderReceiver : BroadcastReceiver() {

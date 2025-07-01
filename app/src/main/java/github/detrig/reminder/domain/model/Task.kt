@@ -13,6 +13,7 @@ data class Task(
     val notificationText: String = "",
     val notificationTime: String = "",
     val notificationDate: String = "",
+    val timestamp: Long = 0L,
     val periodicityDaysWithTime: Set<Pair<Int, String>> = setOf(), //Calendar.Day, time
     val imageUri: String = "",
     val isActive: Boolean = true

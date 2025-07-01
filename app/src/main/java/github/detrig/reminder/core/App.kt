@@ -3,6 +3,7 @@ package github.detrig.reminder.core
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.ViewModel
+import github.detrig.reminder.di.AppDependenciesProvider
 import github.detrig.reminder.di.ClearViewModel
 import github.detrig.reminder.di.Core
 import github.detrig.reminder.di.ProvideViewModel
@@ -23,6 +24,8 @@ class App : Application(), ProvideViewModel {
             }
         }
         core = Core(this, clearViewModel)
+
+        AppDependenciesProvider.init(core)
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
 //        val taskDatabase = TaskDatabase.getInstance(this)

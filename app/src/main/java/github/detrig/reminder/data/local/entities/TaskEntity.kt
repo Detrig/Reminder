@@ -12,6 +12,7 @@ data class TaskEntity(
     val notificationText: String,
     val notificationTime: String,
     val notificationDate: String,
+    val timestamp: Long = 0L,
     val periodicityDaysWithTime: String,  // JSON: "[{"day":"MONDAY","time":"12:00"}]"
     val image: String,
     val isActive: Boolean

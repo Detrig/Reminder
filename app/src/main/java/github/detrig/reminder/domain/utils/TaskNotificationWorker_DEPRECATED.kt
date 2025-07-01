@@ -12,7 +12,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import github.detrig.reminder.R
 
-class TaskNotificationWorker(
+class TaskNotificationWorker_DEPRECATED(
     context: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(context, workerParams) {

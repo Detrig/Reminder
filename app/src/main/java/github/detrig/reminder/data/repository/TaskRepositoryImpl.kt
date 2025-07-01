@@ -48,6 +48,7 @@ class TaskRepositoryImpl(
             notificationText = notificationText,
             notificationTime = notificationTime,
             notificationDate = notificationDate,
+            timestamp = timestamp,
             periodicityDaysWithTime = gson.toJson(
                 periodicityDaysWithTime.map { DayTimePair(it.first, it.second) }
             ),
@@ -69,6 +70,7 @@ class TaskRepositoryImpl(
             notificationText = notificationText,
             notificationTime = notificationTime,
             notificationDate = notificationDate,
+            timestamp = timestamp,
             periodicityDaysWithTime = serializedList.map {
                 it.day to it.time
             }.toSet(),

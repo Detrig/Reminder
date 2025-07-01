@@ -1,5 +1,6 @@
 package github.detrig.reminder.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import github.detrig.reminder.di.ClearViewModel
 import github.detrig.reminder.core.Navigation
@@ -65,6 +66,7 @@ class TasksListViewModel(
         viewModelScope.launch(dispatcherIo) {
             tasks.forEach { task ->
                 val existingTask = taskRepository.getTaskById(task.id)
+                val task = task.copy(timestamp = DateUtil.getTriggerTimeMillis(task.notificationDate, task.notificationTime))
 
                 if (existingTask != null) {
                     taskRepository.updateTask(task)
@@ -74,8 +76,9 @@ class TasksListViewModel(
                 }
                 setReminder(
                     task,
-                    DateUtil.getTriggerTimeMillis(task.notificationDate, task.notificationTime)
+                    task.timestamp
                 )
+                Log.d("alz-alarm", "task.timestamp: ${task.timestamp}")
             }
             withContext(dispatcherMain) {
                 val currentList =
@@ -105,7 +108,7 @@ class TasksListViewModel(
             } else {
                 setReminder(
                     task,
-                    DateUtil.getTriggerTimeMillis(task.notificationDate, task.notificationTime)
+                    task.timestamp
                 )
             }
 

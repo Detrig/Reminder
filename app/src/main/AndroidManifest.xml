@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".core.App"
@@ -47,8 +49,16 @@
             </intent-filter>
         </activity>
 
+        <receiver android:name=".domain.utils.receivers.BootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
         <receiver
-            android:name=".domain.utils.TaskReminderReceiver"
+            android:name=".domain.utils.receivers.TaskReminderReceiver"
             android:exported="true" />
     </application>
 
