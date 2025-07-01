@@ -24,6 +24,5 @@ interface ViewModelFactory : ProvideViewModel, ClearViewModel {
         override fun clearViewModel(viewModelClass: Class<out ViewModel>) {
             map.remove(viewModelClass)
         }
-
     }
 }
