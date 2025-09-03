@@ -36,14 +36,18 @@ class TasksUnifiedRcViewAdapter(
     var isSelectionMode = false
 
 
-    fun update(newTasks: List<Task>) {
+    fun update(newTasks: List<Task>, isCalendarViewScreen: Boolean) {
+        Log.d("alz-04", "newTasks: $newTasks")
         val grouped = newTasks.groupBy { it.notificationDate.substringBefore(" ") }
             .toSortedMap()
 
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             .format(Calendar.getInstance().time)
 
-        val filtered = grouped.filterKeys { it >= today }
+        //Флаг для двух разных мест применения адаптера (mainScreen и calendarScreen)
+        var filtered: Map<String, List<Task>> = grouped
+        if (!isCalendarViewScreen)
+            filtered = grouped.filterKeys { it >= today }
 
         val newItems = mutableListOf<ListItem>()
         for ((date, tasks) in filtered) {

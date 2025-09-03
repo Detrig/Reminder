@@ -33,11 +33,11 @@ class TasksListFragment : AbstractFragment<FragmentTasksListBinding>() {
         viewModel.getAllTasks()
 
         viewModel.tasksLiveData().value?.let {
-            dateTasksRcViewAdapter.update(ArrayList(it))
+            dateTasksRcViewAdapter.update(ArrayList(it), false)
         }
 
         viewModel.tasksLiveData().observe(viewLifecycleOwner) {
-            dateTasksRcViewAdapter.update(ArrayList(it))
+            dateTasksRcViewAdapter.update(ArrayList(it), false)
         }
         printAllScheduledNotifications(requireContext())
     }

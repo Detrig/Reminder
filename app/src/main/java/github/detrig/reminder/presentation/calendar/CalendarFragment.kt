@@ -45,8 +45,7 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
             override fun onClick(calendarDay: CalendarDay) {
                 clickedDate = calendarDay.toTaskDateFormat()
                 val tasksForDate = viewModel.getTasksByDate(clickedDate).toMutableList()
-
-                tasksRcViewAdapter.update(ArrayList(tasksForDate))
+                tasksRcViewAdapter.update(ArrayList(tasksForDate), true)
                 if (previousClickedDate != clickedDate) {
                     tasksRcViewAdapter.clearSelection()
                     updateDeleteButton()
@@ -57,7 +56,7 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
 
         viewModel.tasksLiveData().observe(viewLifecycleOwner) {
             val tasksForClickedDay = it.filter { it.notificationDate == clickedDate }
-            tasksRcViewAdapter.update(ArrayList(tasksForClickedDay))
+            tasksRcViewAdapter.update(ArrayList(tasksForClickedDay), true)
             updateCalendar(it)
         }
     }
@@ -110,7 +109,7 @@ class CalendarFragment : AbstractFragment<FragmentCalendarBinding>() {
         val notificationDate = requireArguments().getString("NOTIFICATION_DATE_KEY", "")
         if (notificationDate != "") {
             val tasksForDate = viewModel.getTasksByDate(notificationDate).toMutableList()
-            tasksRcViewAdapter.update(ArrayList(tasksForDate))
+            tasksRcViewAdapter.update(ArrayList(tasksForDate), true)
             clickedDate = notificationDate
             previousClickedDate = clickedDate
         }
