@@ -30,4 +30,8 @@
     <string name="appwidget_text">EXAMPLE</string>
     <string name="add_widget">Add widget</string>
     <string name="app_widget_description">This is an app widget description</string>
+    <string name="no_internet_connection_message">Отсутствует соединение с интернетом</string>
+    <string name="retry">Повторить попытку</string>
+    <string name="re_record_voice">Перезаписать</string>
+    <string name="done">Далее →</string>
 </resources>
